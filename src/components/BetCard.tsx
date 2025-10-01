@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BetCardProps {
   title: string;
@@ -14,34 +15,44 @@ interface BetCardProps {
 export const BetCard = ({ title, description, odds, variant, icon }: BetCardProps) => {
   const [betAmount, setBetAmount] = useState(100);
   const [hasPlacedBet, setHasPlacedBet] = useState(false);
+  const [playerName, setPlayerName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleBet = () => {
-    setHasPlacedBet(true);
-    toast.success(`Aposta de R$ ${betAmount} realizada em "${title}"! 🎰`, {
-      description: `Odds: ${odds}`,
-    });
+  const handleBet = async () => {
+    if (!playerName.trim()) {
+      toast.error("Digite seu nome para apostar!");
+      return;
+    }
+
+    setIsLoading(true);
     
-    // Confetti effect
-    const duration = 3 * 1000;
-    const animationEnd = Date.now() + duration;
-    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-
-    const randomInRange = (min: number, max: number) => {
-      return Math.random() * (max - min) + min;
+    const betTypeMap: Record<string, string> = {
+      "Vai Enlouquecer": "enlouquecer",
+      "Vai se Formar!": "formar",
+      "Vai Jubilar": "jubilar"
     };
 
-    const interval = setInterval(() => {
-      const timeLeft = animationEnd - Date.now();
+    const { error } = await supabase
+      .from('bets')
+      .insert({
+        player_name: playerName.trim(),
+        bet_type: betTypeMap[title],
+        amount: betAmount
+      });
 
-      if (timeLeft <= 0) {
-        return clearInterval(interval);
-      }
+    setIsLoading(false);
 
-      const particleCount = 50 * (timeLeft / duration);
-      
-      // Using the window.confetti if available (would need to add canvas-confetti library)
-      // For now, just a visual feedback with toast
-    }, 250);
+    if (error) {
+      toast.error("Erro ao realizar aposta", {
+        description: error.message
+      });
+      return;
+    }
+
+    setHasPlacedBet(true);
+    toast.success(`Aposta de R$ ${betAmount} realizada em "${title}"! 🎰`, {
+      description: `Odds: ${odds} | Jogador: ${playerName}`,
+    });
   };
 
   return (
@@ -67,6 +78,20 @@ export const BetCard = ({ title, description, odds, variant, icon }: BetCardProp
         </div>
         
         <div className="space-y-3">
+          {!hasPlacedBet && (
+            <div className="flex flex-col gap-2">
+              <label className="text-sm text-muted-foreground">Seu Nome:</label>
+              <input
+                type="text"
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+                placeholder="Digite seu nome"
+                className="w-full bg-input border border-border rounded-lg px-3 py-2 text-foreground"
+                maxLength={50}
+              />
+            </div>
+          )}
+          
           <div className="flex items-center gap-2">
             <label className="text-sm text-muted-foreground">Valor:</label>
             <input
@@ -76,6 +101,7 @@ export const BetCard = ({ title, description, odds, variant, icon }: BetCardProp
               className="flex-1 bg-input border border-border rounded-lg px-3 py-2 text-foreground"
               min="10"
               step="10"
+              disabled={hasPlacedBet}
             />
             <span className="text-sm text-muted-foreground">R$</span>
           </div>
@@ -85,9 +111,9 @@ export const BetCard = ({ title, description, odds, variant, icon }: BetCardProp
             size="lg"
             className="w-full"
             onClick={handleBet}
-            disabled={hasPlacedBet}
+            disabled={hasPlacedBet || isLoading}
           >
-            {hasPlacedBet ? "✓ Aposta Realizada!" : "🎲 Apostar Agora!"}
+            {isLoading ? "⏳ Apostando..." : hasPlacedBet ? "✓ Aposta Realizada!" : "🎲 Apostar Agora!"}
           </Button>
           
           {hasPlacedBet && (

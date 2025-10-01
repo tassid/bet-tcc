@@ -14,7 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bets: {
+        Row: {
+          amount: number
+          bet_type: string
+          created_at: string
+          id: string
+          player_name: string
+        }
+        Insert: {
+          amount: number
+          bet_type: string
+          created_at?: string
+          id?: string
+          player_name: string
+        }
+        Update: {
+          amount?: number
+          bet_type?: string
+          created_at?: string
+          id?: string
+          player_name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

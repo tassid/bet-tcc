@@ -1,4 +1,5 @@
 import { BetCard } from "@/components/BetCard";
+import { BettingRanking } from "@/components/BettingRanking";
 import tassianeImage from "@/assets/tassiane-stressed.png";
 
 const Index = () => {
@@ -75,6 +76,11 @@ const Index = () => {
               icon="💀"
             />
           </div>
+        </div>
+
+        {/* Ranking Section */}
+        <div className="max-w-6xl mx-auto mb-12">
+          <BettingRanking />
         </div>
 
         {/* Stats Section */}
