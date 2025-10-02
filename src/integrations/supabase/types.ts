@@ -38,6 +38,27 @@ export type Database = {
         }
         Relationships: []
       }
+      jackpots: {
+        Row: {
+          created_at: string
+          id: string
+          jackpot_type: string
+          player_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          jackpot_type: string
+          player_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          jackpot_type?: string
+          player_name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

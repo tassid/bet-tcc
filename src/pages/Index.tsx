@@ -1,6 +1,7 @@
 import { BetCard } from "@/components/BetCard";
 import { BettingRanking } from "@/components/BettingRanking";
 import { DiceGame } from "@/components/DiceGame";
+import { JackpotHallOfFame } from "@/components/JackpotHallOfFame";
 import tassianeImage from "@/assets/tassiane-stressed.png";
 
 const Index = () => {
@@ -108,6 +109,11 @@ const Index = () => {
         {/* Dice Game Section */}
         <div className="max-w-2xl mx-auto mb-12">
           <DiceGame />
+        </div>
+
+        {/* Hall of Fame Section */}
+        <div className="max-w-4xl mx-auto mb-12">
+          <JackpotHallOfFame />
         </div>
 
         {/* Footer */}

@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const DiceGame = () => {
   const [reel1, setReel1] = useState(0);
@@ -8,8 +12,23 @@ export const DiceGame = () => {
   const [reel3, setReel3] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winMessage, setWinMessage] = useState("");
+  const [playerName, setPlayerName] = useState("");
+  const [hasStarted, setHasStarted] = useState(false);
 
   const symbols = ["🐯", "🍒", "🍋", "⭐", "💎", "🔔", "7️⃣", "🍀"];
+
+  const saveJackpot = async (type: 'tigrinho' | 'seven') => {
+    const { error } = await supabase
+      .from('jackpots')
+      .insert({
+        player_name: playerName.trim(),
+        jackpot_type: type
+      });
+
+    if (error) {
+      console.error("Erro ao salvar jackpot:", error);
+    }
+  };
 
   const spin = () => {
     setIsSpinning(true);
@@ -38,6 +57,16 @@ export const DiceGame = () => {
       if (final1 === final2 && final2 === final3) {
         if (symbols[final1] === "🐯") {
           setWinMessage("🎰 JACKPOT DO TIGRINHO! 🐯🐯🐯 GANHOU TUDO!");
+          saveJackpot('tigrinho');
+          toast.success("🐯 JACKPOT REGISTRADO!", {
+            description: `${playerName} entrou para o hall da fama!`
+          });
+        } else if (symbols[final1] === "7️⃣") {
+          setWinMessage("🎰 JACKPOT 777! 7️⃣7️⃣7️⃣ SUPER SORTE!");
+          saveJackpot('seven');
+          toast.success("7️⃣ JACKPOT 777 REGISTRADO!", {
+            description: `${playerName} entrou para o hall da fama!`
+          });
         } else {
           setWinMessage("🎉 TRINCA! VOCÊ GANHOU! 🎉");
         }
@@ -45,6 +74,15 @@ export const DiceGame = () => {
         setWinMessage("✨ PAR! Pequeno prêmio! ✨");
       }
     }, 2000);
+  };
+
+  const handleStart = () => {
+    if (!playerName.trim()) {
+      toast.error("Digite seu nome para começar a jogar!");
+      return;
+    }
+    setHasStarted(true);
+    toast.success(`Boa sorte, ${playerName}! 🍀`);
   };
 
   return (
@@ -59,8 +97,41 @@ export const DiceGame = () => {
       </CardHeader>
       
       <CardContent className="space-y-6">
-        {/* Slot Machine Display */}
-        <div className="relative bg-card/80 rounded-2xl p-8 border-4 border-primary/50 shadow-inner">
+        {!hasStarted ? (
+          <div className="space-y-4 py-8">
+            <div className="space-y-2">
+              <Label htmlFor="playerName" className="text-lg font-bold">
+                Digite seu nome para começar:
+              </Label>
+              <Input
+                id="playerName"
+                type="text"
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+                placeholder="Seu nome aqui..."
+                className="text-lg"
+                maxLength={50}
+              />
+            </div>
+            <Button
+              onClick={handleStart}
+              variant="gold"
+              size="xl"
+              className="w-full text-2xl font-black px-12 py-6 shadow-gold"
+            >
+              🎰 COMEÇAR A JOGAR
+            </Button>
+          </div>
+        ) : (
+          <>
+            {/* Player Name Display */}
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">Jogador:</p>
+              <p className="text-xl font-bold text-secondary">{playerName}</p>
+            </div>
+
+            {/* Slot Machine Display */}
+            <div className="relative bg-card/80 rounded-2xl p-8 border-4 border-primary/50 shadow-inner">
           {/* Decorative lights */}
           <div className="absolute -top-2 left-0 right-0 flex justify-around">
             {[...Array(5)].map((_, i) => (
@@ -131,18 +202,20 @@ export const DiceGame = () => {
           </div>
         </div>
 
-        {/* Spin Button */}
-        <div className="flex justify-center">
-          <Button
-            onClick={spin}
-            disabled={isSpinning}
-            variant="gold"
-            size="xl"
-            className="text-2xl font-black px-12 py-6 shadow-gold hover:scale-110 transition-all"
-          >
-            {isSpinning ? "🎰 GIRANDO..." : "🎰 GIRAR"}
-          </Button>
-        </div>
+            {/* Spin Button */}
+            <div className="flex justify-center">
+              <Button
+                onClick={spin}
+                disabled={isSpinning}
+                variant="gold"
+                size="xl"
+                className="text-2xl font-black px-12 py-6 shadow-gold hover:scale-110 transition-all"
+              >
+                {isSpinning ? "🎰 GIRANDO..." : "🎰 GIRAR"}
+              </Button>
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );
